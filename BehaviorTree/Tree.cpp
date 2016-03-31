@@ -1,11 +1,12 @@
 #include "stdafx.h"
 #include "Tree.h"
 
+using namespace BehaviorTree;
+
 Tree::Tree(std::string name) : Behavior(*this, name), mRootBehavior(nullptr)
 {
 	SetUpdateCallback(OnUpdate);
 }
-
 
 void Tree::Start(Behavior& bh, BehaviorObserver observer)
 {
@@ -66,16 +67,18 @@ bool Tree::Step(void* userData)
 		return false;
 	}
 	 
-	// we could use suspended status here
-	current->Tick(userData);
-
-	if (current->mStatus != BehaviorStatus::Running)
+	if (current->mStatus != BehaviorStatus::Suspended)
 	{
-		current->NotifyObserver(current->mStatus);
+		current->Tick(userData);
+	}
+
+	if (current->mStatus == BehaviorStatus::Running)
+	{
+		mBehaviors.push_back(current);
 	}
 	else
 	{
-		mBehaviors.push_back(current);
+		current->NotifyObserver(current->mStatus);
 	}
 
 	return true;

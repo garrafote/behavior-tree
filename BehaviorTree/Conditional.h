@@ -1,14 +1,20 @@
 #pragma once
 #include "Decorator.h"
 
-class Conditional : public Decorator
+namespace BehaviorTree
 {
-public:
-	Conditional(Tree& tree, Behavior& child, class Predicate& predicate, std::string name = "Decorator");
 
-protected:
-	class Predicate& mPredicate;
+	class Conditional : public Decorator
+	{
+	public:
+		Conditional(Tree& tree, Behavior& child, class Predicate& predicate, std::string name = "Conditional");
 
-	static BehaviorStatus OnUpdate(Behavior& bh, void* data);
-};
+	protected:
+		class Predicate& mPredicate;
 
+		static void OnInitialize(Behavior& bh, void* data);
+		static BehaviorStatus OnUpdate(Behavior& bh, void* data);
+		static void OnChildComplete(Behavior& bh, void* data, BehaviorStatus status);
+	};
+
+}

@@ -1,27 +1,31 @@
 #pragma once
 #include "Behavior.h"
 
-typedef bool(*PredicateCallback)(Behavior& self, void* data);
-
-
-class Predicate : public Behavior
+namespace BehaviorTree
 {
-public:
-	Predicate(Tree& tree, std::string name = "Predicate");
-	
-	void SetPredicateCallback(PredicateCallback callback)
+
+	typedef bool(*PredicateCallback)(Behavior& self, void* data);
+
+	class Predicate : public Behavior
 	{
-		mOnPredicate = callback;
-	}
+	public:
+		Predicate(Tree& tree, std::string name = "Predicate");
 
-	bool IsValid() const
-	{
-		return !mOnPredicate || mStatus != BehaviorStatus::Failure;
-	}
+		void SetPredicateCallback(PredicateCallback callback)
+		{
+			mOnPredicate = callback;
+		}
 
-	static BehaviorStatus OnUpdate(Behavior& self, void* data);
+		bool IsValid() const
+		{
+			return !mOnPredicate || mStatus != BehaviorStatus::Failure;
+		}
 
-protected:
-	PredicateCallback mOnPredicate;
-};
+		static BehaviorStatus OnUpdate(Behavior& self, void* data);
+
+	protected:
+		PredicateCallback mOnPredicate;
+	};
+
+}
 

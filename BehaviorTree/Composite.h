@@ -2,12 +2,17 @@
 #pragma once
 #include "Behavior.h"
 
-class Composite : public Behavior
+namespace BehaviorTree
 {
-public:
-	Composite(Tree& tree, std::string name);
 
-	std::vector<Behavior*> mChildren;
+	class Composite : public Behavior
+	{
+	public:
+		Composite(Tree& tree, std::string name);
 
-	void Add(Behavior& behavior);
-};
+		std::vector<Behavior*> mChildren;
+
+		void Add(Behavior& behavior);
+	};
+
+}

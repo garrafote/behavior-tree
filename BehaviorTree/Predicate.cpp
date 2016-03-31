@@ -1,6 +1,8 @@
 #include "stdafx.h"
 #include "Predicate.h"
 
+using namespace BehaviorTree;
+
 Predicate::Predicate(Tree& tree, std::string name) : Behavior(tree, name)
 {
 	SetUpdateCallback(&OnUpdate);

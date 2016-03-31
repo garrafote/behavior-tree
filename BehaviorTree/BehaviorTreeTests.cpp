@@ -4,9 +4,12 @@
 #include "Tree.h"
 #include "Behavior.h"
 #include "Selector.h"
+#include "Priority.h"
 #include "Sequence.h"
 #include "Predicate.h"
 #include "Conditional.h"
+
+using namespace BehaviorTree;
 
 #pragma region Miscellaneous
 
@@ -29,6 +32,7 @@ namespace std
 }
 
 typedef MockComposite<Selector> MockSelector;
+typedef MockComposite<Priority> MockPriority;
 typedef MockComposite<Sequence> MockSequence;
 
 #pragma endregion
@@ -99,24 +103,29 @@ TEST(Selector, Should_Suspend_When_ChildIsRunning)
 
 TEST(Selector, Should_Terminate_When_TickPassThroughToSibling)
 {
-	BehaviorStatus status[] = { BehaviorStatus::Success, BehaviorStatus::Failure };
+	BehaviorStatus status[] = {
+		BehaviorStatus::Failure,
+		BehaviorStatus::Success,
+	};
 
+	Tree tree;
+	MockSelector selector(tree, 1);
+	tree.Start(selector);
+
+	int terminated = 0;
 	for (auto s : status)
 	{
-		Tree tree;
-		MockSelector selector(tree, 1);
-		tree.Start(selector);
-
+		selector[0].mReturnStatus = BehaviorStatus::Running;
 		tree.Tick();
 
 		CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
-		CHECK_EQUAL(0, selector[0].mTerminateCalled);
+		CHECK_EQUAL(terminated, selector[0].mTerminateCalled);
 
 		selector[0].mReturnStatus = s;
 		tree.Tick();
 
 		CHECK_EQUAL(s, selector.GetStatus());
-		CHECK_EQUAL(1, selector[0].mTerminateCalled);
+		CHECK_EQUAL(++terminated, selector[0].mTerminateCalled);
 	}
 }
 
@@ -186,6 +195,80 @@ TEST(Selector, Should_RestartOnTick_When_Terminated)
 	}
 }
 
+#pragma endregion
+
+#pragma region Priority Selector Tests
+
+TEST(Priority, Should_Succed_When_ChildSucceds)
+{
+	Tree tree;
+	MockPriority priority(tree, 2);
+	tree.Start(priority);
+
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+	CHECK_EQUAL(0, priority[0].mTerminateCalled);
+	CHECK_EQUAL(0, priority[1].mInitializeCalled);
+
+	priority[0].mReturnStatus = BehaviorStatus::Failure;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+	CHECK_EQUAL(1, priority[0].mTerminateCalled);
+	CHECK_EQUAL(1, priority[1].mInitializeCalled);
+
+	priority[1].mReturnStatus = BehaviorStatus::Success;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
+	CHECK_EQUAL(2, priority[0].mTerminateCalled);
+	CHECK_EQUAL(1, priority[1].mTerminateCalled);
+}
+
+TEST(Priority, Should_NotInitializeSecond_When_FirstSucceeds)
+{
+	Tree tree;
+	MockPriority priority(tree, 2);
+	tree.Start(priority);
+
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+	CHECK_EQUAL(0, priority[0].mTerminateCalled);
+	CHECK_EQUAL(0, priority[1].mInitializeCalled);
+
+	priority[0].mReturnStatus = BehaviorStatus::Success;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
+	CHECK_EQUAL(1, priority[0].mTerminateCalled);
+	CHECK_EQUAL(0, priority[1].mInitializeCalled);
+}
+
+TEST(Priority, Should_ResetPreviouslyRunningChild_When_AnteriorChildSucceeds)
+{
+	Tree tree;
+	MockPriority priority(tree, 3);
+	tree.Start(priority);
+
+	priority[0].mReturnStatus = BehaviorStatus::Failure;
+	priority[1].mReturnStatus = BehaviorStatus::Failure;
+	priority[2].mReturnStatus = BehaviorStatus::Running;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+	CHECK_EQUAL(0, priority[2].mTerminateCalled);
+	CHECK_EQUAL(1, priority[2].mInitializeCalled);
+
+	priority[0].mReturnStatus = BehaviorStatus::Success;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
+	CHECK_EQUAL(2, priority[0].mTerminateCalled);
+	CHECK_EQUAL(0, priority[1].mResetCalled);
+	CHECK_EQUAL(1, priority[2].mResetCalled);
+}
 
 #pragma endregion
 
@@ -205,24 +288,29 @@ TEST(Sequence, Should_Suspend_When_ChildIsRunning)
 
 TEST(Sequence, Should_Terminate_When_TickPassThroughToSibling)
 {
-	BehaviorStatus status[] = { BehaviorStatus::Success, BehaviorStatus::Failure };
+	BehaviorStatus status[] = {
+		BehaviorStatus::Success, 
+		BehaviorStatus::Failure,
+	};
 	
+	Tree tree;
+	MockSequence sequence(tree, 1);
+	tree.Start(sequence);
+
+	int terminated = 0;
 	for (auto s : status)
 	{
-		Tree tree;
-		MockSequence sequence(tree, 1);
-		tree.Start(sequence);
-
+		sequence[0].mReturnStatus = BehaviorStatus::Running;
 		tree.Tick();
 
 		CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
-		CHECK_EQUAL(0, sequence[0].mTerminateCalled);
+		CHECK_EQUAL(terminated, sequence[0].mTerminateCalled);
 
 		sequence[0].mReturnStatus = s;
 		tree.Tick();
 
 		CHECK_EQUAL(s, sequence.GetStatus());
-		CHECK_EQUAL(1, sequence[0].mTerminateCalled);
+		CHECK_EQUAL(++terminated, sequence[0].mTerminateCalled);
 	}
 }
 
@@ -291,12 +379,6 @@ TEST(Sequence, Should_RestartOnTick_When_Terminated)
 		CHECK_EQUAL(0, sequence[1].mInitializeCalled);
 	}
 }
-
-#pragma endregion
-
-#pragma region Priority Selector Tests
-
-
 
 #pragma endregion
 
@@ -376,11 +458,12 @@ TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 
 	tree.Start(conditional);
 
-	BehaviorStatus status[] = { 
-		BehaviorStatus::Success, 
-		BehaviorStatus::Suspended, 
-		BehaviorStatus::Failure, 
-		BehaviorStatus::Success
+	BehaviorStatus status[] = {
+		BehaviorStatus::Running,
+		BehaviorStatus::Failure,
+		BehaviorStatus::Running,
+		BehaviorStatus::Success,
+		BehaviorStatus::Running
 	};
 
 	for (auto s : status)
@@ -396,4 +479,4 @@ TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 
 // test subtrees...
 
-// test interaction between selectors and sequences
+// test interaction between prioritys and sequences

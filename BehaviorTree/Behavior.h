@@ -1,89 +1,92 @@
 ﻿#pragma once
 #include <string>
 
-enum class BehaviorStatus
+namespace BehaviorTree
 {
-	Invalid,
-	Success,
-	Failure,
-	Running,
-	Suspended,
-};
-
-class Behavior;
-typedef void(*ObserverCallback)(Behavior&, void*, BehaviorStatus);
-typedef BehaviorStatus(*UpdateCallback)(Behavior&, void*);
-typedef void(*ResetCallback)(Behavior&, void*);
-typedef void(*InitializeCallback)(Behavior&, void*);
-typedef void(*TerminateCallback)(Behavior&, void*, BehaviorStatus);
-
-struct BehaviorObserver
-{
-	ObserverCallback callback;
-	Behavior*        behavior;
-	void*            data;
-
-	static BehaviorObserver Default() { return{ nullptr, nullptr, nullptr }; }
-};
-
-class Behavior
-{
-	friend class Tree;
-
-public:
-
-	Behavior(Tree& tree, std::string name = "Behavior");
-	~Behavior();
-
-	void SetInitializeCallback(InitializeCallback callback)
+	enum class BehaviorStatus
 	{
-		mOnInitialize = callback;
-	}
+		Invalid,
+		Success,
+		Failure,
+		Running,
+		Suspended,
+	};
 
-	void SetResetCallback(ResetCallback callback)
-	{
-		mOnReset = callback;
-	}
+	class Behavior;
+	typedef void(*ObserverCallback)(Behavior&, void*, BehaviorStatus);
+	typedef BehaviorStatus(*UpdateCallback)(Behavior&, void*);
+	typedef void(*ResetCallback)(Behavior&, void*);
+	typedef void(*InitializeCallback)(Behavior&, void*);
+	typedef void(*TerminateCallback)(Behavior&, void*, BehaviorStatus);
 
-	void SetUpdateCallback(UpdateCallback callback)
+	struct BehaviorObserver
 	{
-		mOnUpdate = callback;
-	}
+		ObserverCallback callback;
+		Behavior*        behavior;
+		void*            data;
 
-	void SetTerminateCallback(TerminateCallback callback)
-	{
-		mOnTerminate = callback;
-	}
+		static BehaviorObserver Default() { return{ nullptr, nullptr, nullptr }; }
+	};
 
-	BehaviorStatus GetStatus() const
+	class Behavior
 	{
-		return mStatus;
-	}
+		friend class Tree;
 
-	void SetObserver(BehaviorObserver observer)
-	{
-		mObserver = observer;
-	}
+	public:
 
-	void NotifyObserver(BehaviorStatus status) const
-	{
-		if (mObserver.callback)
+		Behavior(Tree& tree, std::string name = "Behavior");
+		~Behavior();
+
+		void SetInitializeCallback(InitializeCallback callback)
 		{
-			mObserver.callback(*mObserver.behavior, mObserver.data, status);
+			mOnInitialize = callback;
 		}
-	}
 
-	BehaviorStatus Tick(void* userData = nullptr);
-	void Reset(void* userData);
+		void SetResetCallback(ResetCallback callback)
+		{
+			mOnReset = callback;
+		}
 
-protected:
-	Tree&              mTree;
-	std::string        mName;
-	BehaviorStatus     mStatus;
-	BehaviorObserver   mObserver;
+		void SetUpdateCallback(UpdateCallback callback)
+		{
+			mOnUpdate = callback;
+		}
 
-	UpdateCallback     mOnUpdate;
-	ResetCallback      mOnReset;
-	InitializeCallback mOnInitialize;
-	TerminateCallback  mOnTerminate;
-};
+		void SetTerminateCallback(TerminateCallback callback)
+		{
+			mOnTerminate = callback;
+		}
+
+		BehaviorStatus GetStatus() const
+		{
+			return mStatus;
+		}
+
+		void SetObserver(BehaviorObserver observer)
+		{
+			mObserver = observer;
+		}
+
+		void NotifyObserver(BehaviorStatus status) const
+		{
+			if (mObserver.callback)
+			{
+				mObserver.callback(*mObserver.behavior, mObserver.data, status);
+			}
+		}
+
+		BehaviorStatus Tick(void* userData = nullptr);
+		void Reset(void* userData);
+
+	protected:
+		Tree&              mTree;
+		std::string        mName;
+		BehaviorStatus     mStatus;
+		BehaviorObserver   mObserver;
+
+		UpdateCallback     mOnUpdate;
+		ResetCallback      mOnReset;
+		InitializeCallback mOnInitialize;
+		TerminateCallback  mOnTerminate;
+	};
+}

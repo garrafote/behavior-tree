@@ -142,15 +142,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <Text Include="ReadMe.txt" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="Behavior.h" />
     <ClInclude Include="BehaviorTreeTests.h" />
     <ClInclude Include="Composite.h" />
     <ClInclude Include="Conditional.h" />
     <ClInclude Include="Decorator.h" />
     <ClInclude Include="Predicate.h" />
+    <ClInclude Include="Priority.h" />
     <ClInclude Include="Selector.h" />
     <ClInclude Include="Sequence.h" />
     <ClInclude Include="stdafx.h" />
@@ -165,6 +163,7 @@
     <ClCompile Include="Decorator.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Predicate.cpp" />
+    <ClCompile Include="Priority.cpp" />
     <ClCompile Include="Selector.cpp" />
     <ClCompile Include="Sequence.cpp" />
     <ClCompile Include="stdafx.cpp">

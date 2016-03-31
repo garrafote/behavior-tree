@@ -1,6 +1,8 @@
 ﻿#include "stdafx.h"
 #include "Composite.h"
 
+using namespace BehaviorTree;
+
 Composite::Composite(Tree& tree, std::string name) : Behavior(tree, name)
 {
 }

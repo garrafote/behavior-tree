@@ -2,6 +2,8 @@
 #include "Sequence.h"
 #include "Tree.h"
 
+using namespace BehaviorTree;
+
 Sequence::Sequence(Tree& tree, std::string name) :
 	Composite(tree, name)
 {

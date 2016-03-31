@@ -1,6 +1,7 @@
 ﻿#include "stdafx.h"
 #include "Behavior.h"
 
+using namespace BehaviorTree;
 
 Behavior::Behavior(Tree& tree, std::string name) :
 	mTree(tree),

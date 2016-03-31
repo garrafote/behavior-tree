@@ -2,6 +2,8 @@
 #include "Selector.h"
 #include "Tree.h"
 
+using namespace BehaviorTree;
+
 Selector::Selector(Tree& tree, std::string name) :
 	Composite(tree, name)
 {
