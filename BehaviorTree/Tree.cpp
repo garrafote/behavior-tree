@@ -76,7 +76,7 @@ bool Tree::Step(void* userData)
 	{
 		mBehaviors.push_back(current);
 	}
-	else
+	else if (current->mStatus != BehaviorStatus::Suspended)
 	{
 		current->NotifyObserver(current->mStatus);
 	}

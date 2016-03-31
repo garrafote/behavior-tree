@@ -217,6 +217,7 @@ TEST(Priority, Should_Succed_When_ChildSucceds)
 	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
 	CHECK_EQUAL(1, priority[0].mTerminateCalled);
 	CHECK_EQUAL(1, priority[1].mInitializeCalled);
+	CHECK_EQUAL(0, priority[1].mTerminateCalled);
 
 	priority[1].mReturnStatus = BehaviorStatus::Success;
 	tree.Tick();
@@ -267,7 +268,6 @@ TEST(Priority, Should_ResetPreviouslyRunningChild_When_AnteriorChildSucceeds)
 	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
 	CHECK_EQUAL(2, priority[0].mTerminateCalled);
 	CHECK_EQUAL(0, priority[1].mResetCalled);
-	CHECK_EQUAL(1, priority[2].mResetCalled);
 }
 
 #pragma endregion
@@ -472,6 +472,59 @@ TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 		tree.Tick();
 
 		CHECK_EQUAL(s, conditional.GetStatus());
+	}
+}
+
+#pragma endregion
+
+#pragma region Priority + Sequence Integration Tests
+
+TEST(PrioritySequence, Should_)
+{
+	Tree tree;
+	Priority priority(tree);
+	MockSequence sequences[] = {
+		MockSequence(tree, 1),
+		MockSequence(tree, 1),
+	};
+
+	for (MockSequence& sequence : sequences)
+	{
+		priority.Add(sequence);
+	}
+
+	tree.Start(priority);
+
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+
+	sequences[0][0].mReturnStatus = BehaviorStatus::Failure;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+
+	sequences[0][0].mReturnStatus = BehaviorStatus::Success;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
+
+	sequences[0][0].mReturnStatus = BehaviorStatus::Success;
+	tree.Tick();
+}
+
+TEST(PrioritySequence, Should_Template)
+{
+	Tree tree;
+	Priority priority(tree);
+	MockSequence sequences[] = {
+		MockSequence(tree, 2),
+		MockSequence(tree, 2),
+	};
+
+	for (MockSequence& sequence : sequences)
+	{
+		priority.Add(sequence);
 	}
 }
 

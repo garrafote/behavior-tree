@@ -62,6 +62,11 @@ namespace BehaviorTree
 			return mStatus;
 		}
 
+		bool IsRunningOrSuspended()
+		{
+			return mStatus == BehaviorStatus::Running || mStatus == BehaviorStatus::Suspended;
+		}
+
 		void SetObserver(BehaviorObserver observer)
 		{
 			mObserver = observer;
