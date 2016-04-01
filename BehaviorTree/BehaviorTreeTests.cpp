@@ -23,7 +23,6 @@ namespace std
 			INSERT_ELEMENT(BehaviorStatus::Success);
 			INSERT_ELEMENT(BehaviorStatus::Failure);
 			INSERT_ELEMENT(BehaviorStatus::Running);
-			INSERT_ELEMENT(BehaviorStatus::Suspended);
 #undef INSERT_ELEMENT
 		}
 
@@ -98,7 +97,7 @@ TEST(Selector, Should_Suspend_When_ChildIsRunning)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, selector.GetStatus());
 }
 
 TEST(Selector, Should_Terminate_When_TickPassThroughToSibling)
@@ -118,7 +117,7 @@ TEST(Selector, Should_Terminate_When_TickPassThroughToSibling)
 		selector[0].mReturnStatus = BehaviorStatus::Running;
 		tree.Tick();
 
-		CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
+		CHECK_EQUAL(BehaviorStatus::Running, selector.GetStatus());
 		CHECK_EQUAL(terminated, selector[0].mTerminateCalled);
 
 		selector[0].mReturnStatus = s;
@@ -137,14 +136,14 @@ TEST(Selector, Should_Succed_When_ChildSucceds)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, selector.GetStatus());
 	CHECK_EQUAL(0, selector[0].mTerminateCalled);
 	CHECK_EQUAL(0, selector[1].mInitializeCalled);
 
 	selector[0].mReturnStatus = BehaviorStatus::Failure;
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, selector.GetStatus());
 	CHECK_EQUAL(1, selector[0].mTerminateCalled);
 	CHECK_EQUAL(1, selector[1].mInitializeCalled);
 
@@ -164,7 +163,7 @@ TEST(Selector, Should_NotInitializeSecond_When_FirstSucceeds)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, selector.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, selector.GetStatus());
 	CHECK_EQUAL(0, selector[0].mTerminateCalled);
 	CHECK_EQUAL(0, selector[1].mInitializeCalled);
 
@@ -267,7 +266,7 @@ TEST(Priority, Should_ResetPreviouslyRunningChild_When_AnteriorChildSucceeds)
 
 	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
 	CHECK_EQUAL(2, priority[0].mTerminateCalled);
-	CHECK_EQUAL(0, priority[1].mResetCalled);
+	CHECK_EQUAL(1, priority[1].mResetCalled);
 }
 
 #pragma endregion
@@ -282,7 +281,7 @@ TEST(Sequence, Should_Suspend_When_ChildIsRunning)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, sequence.GetStatus());
 }
 
 
@@ -303,7 +302,7 @@ TEST(Sequence, Should_Terminate_When_TickPassThroughToSibling)
 		sequence[0].mReturnStatus = BehaviorStatus::Running;
 		tree.Tick();
 
-		CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
+		CHECK_EQUAL(BehaviorStatus::Running, sequence.GetStatus());
 		CHECK_EQUAL(terminated, sequence[0].mTerminateCalled);
 
 		sequence[0].mReturnStatus = s;
@@ -322,14 +321,14 @@ TEST(Sequence, Should_Fail_When_ChildFails)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, sequence.GetStatus());
 	CHECK_EQUAL(0, sequence[0].mTerminateCalled);
 	CHECK_EQUAL(0, sequence[1].mInitializeCalled);
 
 	sequence[0].mReturnStatus = BehaviorStatus::Success;
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, sequence.GetStatus());
 	CHECK_EQUAL(1, sequence[0].mTerminateCalled);
 	CHECK_EQUAL(1, sequence[1].mInitializeCalled);
 
@@ -349,7 +348,7 @@ TEST(Sequence, Should_NotInitializeSecond_When_FirstFails)
 
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Suspended, sequence.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Running, sequence.GetStatus());
 	CHECK_EQUAL(0, sequence[0].mTerminateCalled);
 	CHECK_EQUAL(0, sequence[1].mInitializeCalled);
 
@@ -500,17 +499,29 @@ TEST(PrioritySequence, Should_)
 	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
 
 	sequences[0][0].mReturnStatus = BehaviorStatus::Failure;
+	sequences[1][0].mReturnStatus = BehaviorStatus::Failure;
 	tree.Tick();
 
-	CHECK_EQUAL(BehaviorStatus::Running, priority.GetStatus());
+	CHECK_EQUAL(BehaviorStatus::Failure, priority.GetStatus());
 
 	sequences[0][0].mReturnStatus = BehaviorStatus::Success;
+	sequences[1][0].mReturnStatus = BehaviorStatus::Failure;
 	tree.Tick();
 
 	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
 
-	sequences[0][0].mReturnStatus = BehaviorStatus::Success;
+	sequences[0][0].mReturnStatus = BehaviorStatus::Failure;
+	sequences[1][0].mReturnStatus = BehaviorStatus::Success;
 	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Success, priority.GetStatus());
+
+
+	sequences[0][0].mReturnStatus = BehaviorStatus::Failure;
+	sequences[1][0].mReturnStatus = BehaviorStatus::Failure;
+	tree.Tick();
+
+	CHECK_EQUAL(BehaviorStatus::Failure, priority.GetStatus());
 }
 
 TEST(PrioritySequence, Should_Template)

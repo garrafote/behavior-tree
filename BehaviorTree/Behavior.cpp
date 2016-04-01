@@ -31,7 +31,7 @@ BehaviorStatus Behavior::Tick(void* userData)
 		mStatus = mOnUpdate(*this, userData);
 	}
 
-	if (mOnTerminate && !IsRunningOrSuspended())
+	if (mOnTerminate && mStatus != BehaviorStatus::Running)
 	{
 		mOnTerminate(*this, userData, mStatus);
 	}

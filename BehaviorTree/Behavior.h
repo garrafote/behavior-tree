@@ -9,7 +9,6 @@ namespace BehaviorTree
 		Success,
 		Failure,
 		Running,
-		Suspended,
 	};
 
 	class Behavior;
@@ -60,11 +59,6 @@ namespace BehaviorTree
 		BehaviorStatus GetStatus() const
 		{
 			return mStatus;
-		}
-
-		bool IsRunningOrSuspended()
-		{
-			return mStatus == BehaviorStatus::Running || mStatus == BehaviorStatus::Suspended;
 		}
 
 		void SetObserver(BehaviorObserver observer)

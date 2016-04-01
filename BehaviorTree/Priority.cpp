@@ -15,46 +15,8 @@ Priority::Priority(Tree& tree, const std::string& name)
 void Priority::OnInitialize(Behavior& bh, void* data)
 {
 	auto& self = reinterpret_cast<Priority&>(bh);
-	self.mCurrent = self.mChildren.end();
-/*
 	self.mCurrent = self.mChildren.begin();
-	self.mTree.Start(**self.mCurrent, { &OnChildComplete, &self, data });*/
-}
-
-void Priority::OnChildComplete(Behavior& bh, void* data, BehaviorStatus status)
-{
-	auto& self = static_cast<Priority&>(bh);
-
-	const Behavior& child = **self.mCurrent;
-
-	// stop as soon as the current child has the same status 
-	// as breakstatus (either success or failure)
-	if (child.GetStatus() == BehaviorStatus::Success)
-	{
-		self.mTree.Stop(self, BehaviorStatus::Success);
-		return;
-	}
-
-	// children can either complete with success or failure
-	ASSERT(child.GetStatus() == BehaviorStatus::Failure);
-
-	// otherwise, move on to the next child
-	++self.mCurrent;
-
-	// return fallthrough (success or failure) if no children left
-	if (self.mCurrent == self.mChildren.end())
-	{
-		self.mTree.Stop(self, BehaviorStatus::Failure);
-		return;
-	}
-
-	// start the execution of the next child 
-	// and get notified on it's completion
-
-	if (self.mRunning != *self.mCurrent || !self.mRunning->IsRunningOrSuspended())
-	{
-		self.mTree.Start(**self.mCurrent, { &OnChildComplete, &self, data });
-	}
+	self.mLast = self.mChildren.begin();
 }
 
 
@@ -69,59 +31,34 @@ BehaviorStatus Priority::OnUpdate(Behavior& bh, void* data)
 {
 	auto& self = reinterpret_cast<Priority&>(bh);
 
-	if (self.mCurrent != self.mChildren.end())
-	{
-		self.mRunning = *self.mCurrent;
-	}
-
 	self.mCurrent = self.mChildren.begin();
 
-	if (self.mRunning != *self.mCurrent || !self.mRunning->IsRunningOrSuspended())
+	for (;;)
 	{
-		self.mTree.Start(**self.mCurrent, { &OnChildComplete, &self, data });
-	}
+		Behavior& child = **self.mCurrent;
 
-	//if (self.mRunning)
-	//{
-	//	for (auto child : self.mChildren)
-	//	{
-	//		if (child == self.mRunning)
-	//		{
-	//			// need to clear previously running child 
-	//			// if it is after the currently running child
-	//			child->Reset(data);
-	//			break;
-	//		}
-	//	}
-	//}
+		child.Tick(data);
 
-	return BehaviorStatus::Running;
-
-	Behavior* selected = nullptr;
-	for (auto child : self.mChildren)
-	{
-		if (selected)
+		if (child.GetStatus() != BehaviorStatus::Failure)
 		{
-			if (child == self.mRunning)
+			auto it = self.mCurrent;
+			for (++it; it <= self.mLast; ++it)
 			{
-				// need to clear previously running child 
-				// if it is after the currently running child
-				child->Reset(data);
+				(*it)->Reset(data);
 			}
-			continue;
+
+			self.mLast = self.mCurrent;
+			return child.GetStatus();
 		}
 
-		if (child->Tick() != BehaviorStatus::Failure)
+		// otherwise, move on to the next child
+		++self.mCurrent;
+
+		// return fallthrough (success or failure) if no children left
+		if (self.mCurrent == self.mChildren.end())
 		{
-			selected = child;
+			self.mCurrent = self.mChildren.begin();
+			return BehaviorStatus::Failure;
 		}
 	}
-
-	if (selected)
-	{
-		self.mRunning = selected;
-		return selected->GetStatus();
-	}
-
-	return BehaviorStatus::Failure;
 }
