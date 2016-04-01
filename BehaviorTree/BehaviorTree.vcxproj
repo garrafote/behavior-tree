@@ -147,6 +147,7 @@
     <ClInclude Include="Composite.h" />
     <ClInclude Include="Conditional.h" />
     <ClInclude Include="Decorator.h" />
+    <ClInclude Include="EventTree.h" />
     <ClInclude Include="Predicate.h" />
     <ClInclude Include="Priority.h" />
     <ClInclude Include="Selector.h" />
@@ -161,6 +162,7 @@
     <ClCompile Include="Composite.cpp" />
     <ClCompile Include="Conditional.cpp" />
     <ClCompile Include="Decorator.cpp" />
+    <ClCompile Include="EventTree.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Predicate.cpp" />
     <ClCompile Include="Priority.cpp" />

@@ -31,6 +31,7 @@ namespace BehaviorTree
 	class Behavior
 	{
 		friend class Tree;
+		friend class EventTree;
 
 	public:
 

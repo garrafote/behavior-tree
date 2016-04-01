@@ -69,33 +69,19 @@ BehaviorStatus Priority::OnUpdate(Behavior& bh, void* data)
 {
 	auto& self = reinterpret_cast<Priority&>(bh);
 
-	if (self.mCurrent != self.mChildren.end())
-	{
-		self.mRunning = *self.mCurrent;
-	}
-
-	self.mCurrent = self.mChildren.begin();
-
-	if (self.mRunning != *self.mCurrent || !self.mRunning->IsRunningOrSuspended())
-	{
-		self.mTree.Start(**self.mCurrent, { &OnChildComplete, &self, data });
-	}
-
-	//if (self.mRunning)
+	//if (self.mCurrent != self.mChildren.end())
 	//{
-	//	for (auto child : self.mChildren)
-	//	{
-	//		if (child == self.mRunning)
-	//		{
-	//			// need to clear previously running child 
-	//			// if it is after the currently running child
-	//			child->Reset(data);
-	//			break;
-	//		}
-	//	}
+	//	self.mRunning = *self.mCurrent;
 	//}
 
-	return BehaviorStatus::Running;
+	//self.mCurrent = self.mChildren.begin();
+
+	//if (self.mRunning != *self.mCurrent || !self.mRunning->IsRunningOrSuspended())
+	//{
+	//	self.mTree.Start(**self.mCurrent, { &OnChildComplete, &self, data });
+	//}
+
+	//return BehaviorStatus::Running;
 
 	Behavior* selected = nullptr;
 	for (auto child : self.mChildren)
@@ -120,7 +106,17 @@ BehaviorStatus Priority::OnUpdate(Behavior& bh, void* data)
 	if (selected)
 	{
 		self.mRunning = selected;
-		return selected->GetStatus();
+		switch (selected->GetStatus())
+		{
+		case BehaviorStatus::Failure:
+			return BehaviorStatus::Failure;
+
+		case BehaviorStatus::Success:
+			return BehaviorStatus::Success;
+
+		default:
+			return BehaviorStatus::Running;
+		}
 	}
 
 	return BehaviorStatus::Failure;

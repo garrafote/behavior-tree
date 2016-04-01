@@ -2,6 +2,7 @@
 #include "BehaviorTreeTests.h"
 #include <map>
 #include "Tree.h"
+#include "EventTree.h"
 #include "Behavior.h"
 #include "Selector.h"
 #include "Priority.h"
@@ -41,7 +42,7 @@ typedef MockComposite<Sequence> MockSequence;
 
 TEST(Behavior, Should_InitializeOnlyOnce_When_TickIsCalled)
 {
-	Tree tree;
+	EventTree tree;
 	MockBehavior behavior(tree);
 	tree.Start(behavior);
 
@@ -57,7 +58,7 @@ TEST(Behavior, Should_InitializeOnlyOnce_When_TickIsCalled)
 
 TEST(Behavior, Should_Update_When_TickIsCalled)
 {
-	Tree tree;
+	EventTree tree;
 	MockBehavior behavior(tree);
 	tree.Start(behavior);
 
@@ -73,7 +74,7 @@ TEST(Behavior, Should_Update_When_TickIsCalled)
 
 TEST(Behavior, Should_Terminate_When_ActionSucceded)
 {
-	Tree tree;
+	EventTree tree;
 	MockBehavior behavior(tree);
 	tree.Start(behavior);
 
@@ -92,7 +93,7 @@ TEST(Behavior, Should_Terminate_When_ActionSucceded)
 
 TEST(Selector, Should_Suspend_When_ChildIsRunning)
 {
-	Tree tree;
+	EventTree tree;
 	MockSelector selector(tree, 1);
 	tree.Start(selector);
 
@@ -108,7 +109,7 @@ TEST(Selector, Should_Terminate_When_TickPassThroughToSibling)
 		BehaviorStatus::Success,
 	};
 
-	Tree tree;
+	EventTree tree;
 	MockSelector selector(tree, 1);
 	tree.Start(selector);
 
@@ -131,7 +132,7 @@ TEST(Selector, Should_Terminate_When_TickPassThroughToSibling)
 
 TEST(Selector, Should_Succed_When_ChildSucceds)
 {
-	Tree tree;
+	EventTree tree;
 	MockSelector selector(tree, 3);
 	tree.Start(selector);
 
@@ -158,7 +159,7 @@ TEST(Selector, Should_Succed_When_ChildSucceds)
 
 TEST(Selector, Should_NotInitializeSecond_When_FirstSucceeds)
 {
-	Tree tree;
+	EventTree tree;
 	MockSelector selector(tree, 2);
 	tree.Start(selector);
 
@@ -178,7 +179,7 @@ TEST(Selector, Should_NotInitializeSecond_When_FirstSucceeds)
 
 TEST(Selector, Should_RestartOnTick_When_Terminated)
 {
-	Tree tree;
+	EventTree tree;
 	MockSelector selector(tree, 2);
 	tree.Start(selector);
 
@@ -201,7 +202,7 @@ TEST(Selector, Should_RestartOnTick_When_Terminated)
 
 TEST(Priority, Should_Succed_When_ChildSucceds)
 {
-	Tree tree;
+	EventTree tree;
 	MockPriority priority(tree, 2);
 	tree.Start(priority);
 
@@ -229,7 +230,7 @@ TEST(Priority, Should_Succed_When_ChildSucceds)
 
 TEST(Priority, Should_NotInitializeSecond_When_FirstSucceeds)
 {
-	Tree tree;
+	EventTree tree;
 	MockPriority priority(tree, 2);
 	tree.Start(priority);
 
@@ -249,7 +250,7 @@ TEST(Priority, Should_NotInitializeSecond_When_FirstSucceeds)
 
 TEST(Priority, Should_ResetPreviouslyRunningChild_When_AnteriorChildSucceeds)
 {
-	Tree tree;
+	EventTree tree;
 	MockPriority priority(tree, 3);
 	tree.Start(priority);
 
@@ -276,7 +277,7 @@ TEST(Priority, Should_ResetPreviouslyRunningChild_When_AnteriorChildSucceeds)
 
 TEST(Sequence, Should_Suspend_When_ChildIsRunning)
 {
-	Tree tree;
+	EventTree tree;
 	MockSequence sequence(tree, 1);
 	tree.Start(sequence);
 
@@ -293,7 +294,7 @@ TEST(Sequence, Should_Terminate_When_TickPassThroughToSibling)
 		BehaviorStatus::Failure,
 	};
 	
-	Tree tree;
+	EventTree tree;
 	MockSequence sequence(tree, 1);
 	tree.Start(sequence);
 
@@ -316,7 +317,7 @@ TEST(Sequence, Should_Terminate_When_TickPassThroughToSibling)
 
 TEST(Sequence, Should_Fail_When_ChildFails)
 {
-	Tree tree;
+	EventTree tree;
 	MockSequence sequence(tree, 3);
 	tree.Start(sequence);
 
@@ -343,7 +344,7 @@ TEST(Sequence, Should_Fail_When_ChildFails)
 
 TEST(Sequence, Should_NotInitializeSecond_When_FirstFails)
 {
-	Tree tree;
+	EventTree tree;
 	MockSequence sequence(tree, 2);
 	tree.Start(sequence);
 
@@ -363,7 +364,7 @@ TEST(Sequence, Should_NotInitializeSecond_When_FirstFails)
 
 TEST(Sequence, Should_RestartOnTick_When_Terminated)
 {
-	Tree tree;
+	EventTree tree;
 	MockSequence sequence(tree, 2);
 	tree.Start(sequence);
 
@@ -386,7 +387,7 @@ TEST(Sequence, Should_RestartOnTick_When_Terminated)
 
 TEST(Predicate, Should_Succeed_When_NoPredicate)
 {
-	Tree tree;
+	EventTree tree;
 	Predicate predicate(tree);
 	tree.Start(predicate);
 
@@ -398,7 +399,7 @@ TEST(Predicate, Should_Succeed_When_NoPredicate)
 
 TEST(Predicate, Should_Succeed_When_PredicateReturnsTrue)
 {
-	Tree tree;
+	EventTree tree;
 	MockPredicate predicate(tree);
 
 	tree.Start(predicate);
@@ -412,7 +413,7 @@ TEST(Predicate, Should_Succeed_When_PredicateReturnsTrue)
 
 TEST(Predicate, Should_Fail_When_PredicateReturnsFalse)
 {
-	Tree tree;
+	EventTree tree;
 	MockPredicate predicate(tree);
 
 	tree.Start(predicate);
@@ -431,7 +432,7 @@ TEST(Predicate, Should_Fail_When_PredicateReturnsFalse)
 
 TEST(Conditional, Should_Fail_When_PredicateFails)
 {
-	Tree tree;
+	EventTree tree;
 	MockPredicate predicate(tree);
 	MockBehavior behavior(tree);
 	Conditional conditional(tree, behavior, predicate);
@@ -451,7 +452,7 @@ TEST(Conditional, Should_Fail_When_PredicateFails)
 
 TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 {
-	Tree tree;
+	EventTree tree;
 	MockPredicate predicate(tree);
 	MockBehavior behavior(tree);
 	Conditional conditional(tree, behavior, predicate);
@@ -481,16 +482,23 @@ TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 
 TEST(PrioritySequence, Should_)
 {
-	Tree tree;
+	BasicTree tree;
 	Priority priority(tree);
+
+	EventTree subtrees[] = {
+		EventTree(),
+		EventTree()
+	};
+
 	MockSequence sequences[] = {
 		MockSequence(tree, 1),
 		MockSequence(tree, 1),
 	};
 
-	for (MockSequence& sequence : sequences)
+	for (size_t i = 0; i < 2; i++)
 	{
-		priority.Add(sequence);
+		subtrees[i].Start(sequences[i]);
+		priority.Add(subtrees[i]);
 	}
 
 	tree.Start(priority);
@@ -515,7 +523,7 @@ TEST(PrioritySequence, Should_)
 
 TEST(PrioritySequence, Should_Template)
 {
-	Tree tree;
+	BasicTree tree;
 	Priority priority(tree);
 	MockSequence sequences[] = {
 		MockSequence(tree, 2),
