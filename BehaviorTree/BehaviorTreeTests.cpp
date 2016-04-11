@@ -479,7 +479,7 @@ TEST(Conditional, Should_ForwardActionStatus_When_PredicateSucceeds)
 
 #pragma region Priority + Sequence Integration Tests
 
-TEST(PrioritySequence, Should_)
+TEST(Priority, Should_Restart_When_Ticked)
 {
 	Tree tree;
 	Priority priority(tree);
@@ -513,20 +513,20 @@ TEST(PrioritySequence, Should_)
 	tree.Tick();
 }
 
-TEST(PrioritySequence, Should_Template)
-{
-	Tree tree;
-	Priority priority(tree);
-	MockSequence sequences[] = {
-		MockSequence(tree, 2),
-		MockSequence(tree, 2),
-	};
-
-	for (MockSequence& sequence : sequences)
-	{
-		priority.Add(sequence);
-	}
-}
+//TEST(Priority, Should_Template)
+//{
+//	Tree tree;
+//	Priority priority(tree);
+//	MockSequence sequences[] = {
+//		MockSequence(tree, 2),
+//		MockSequence(tree, 2),
+//	};
+//
+//	for (MockSequence& sequence : sequences)
+//	{
+//		priority.Add(sequence);
+//	}
+//}
 
 #pragma endregion
 
